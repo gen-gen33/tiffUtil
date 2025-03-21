@@ -36,6 +36,7 @@ from PIL import Image as PILImage
 import io
 import base64
 import tifffile
+from utils.config import NUM_WORKERS
 
 
 # アプリケーション状態を管理するクラス
