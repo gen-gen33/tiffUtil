@@ -18,10 +18,10 @@ class TiffLoader:
 
         Args:
             max_workers: スレッドプールで使用する最大ワーカー数
-                        Noneの場合はCPUコア数×2 (デフォルト)
+                        Noneの場合はCPUコア数-1 (デフォルト)
         """
         self.max_workers = (
-            max_workers if max_workers is not None else os.cpu_count() * 2
+            max_workers if max_workers is not None else os.cpu_count() - 1
         )
         self._stop_event = threading.Event()
         self._progress_callback = None

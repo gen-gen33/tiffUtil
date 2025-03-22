@@ -37,6 +37,11 @@ import io
 import base64
 import tifffile
 from utils.config import NUM_WORKERS
+import concurrent.futures
+import multiprocessing
+import numpy as np
+import threading
+from queue import Queue
 
 
 # アプリケーション状態を管理するクラス
@@ -91,119 +96,6 @@ class WindowControlButton(IconButton):
             color="#E0E0E0",  # ダークモード用の明るい色
             overlay_color="#424242",  # ホバー時の色
         )
-
-
-# class WindowTitleBar(Container):
-#     ICON_SIZE = 15
-#     HEIGHT = 30
-
-#     def __init__(
-#         self, title: str, page: Page, app_state: AppState, on_open_file=None
-#     ) -> None:
-#         super().__init__()
-#         self.page = page
-#         self.base_title = title
-#         self.on_open_file = on_open_file
-#         self.app_state = app_state
-
-#         # 状態変更をリッスン
-#         app_state.add_listener(self.on_state_change)
-
-#         # タイトルテキスト
-#         self.title_text = Text(
-#             self.base_title,
-#             color="#E0E0E0",
-#         )
-
-#         # ボタンの初期化
-#         self.maximize_button = WindowControlButton(
-#             Icons.CROP_SQUARE_SHARP,
-#             icon_size=self.ICON_SIZE,
-#             rotate=math.pi,
-#             on_click=self.maximized_button_clicked,
-#         )
-#         self.minimize_button = WindowControlButton(
-#             Icons.MINIMIZE_SHARP,
-#             icon_size=self.ICON_SIZE,
-#             on_click=self.minimize_button_clicked,
-#         )
-#         self.close_button = WindowControlButton(
-#             Icons.CLOSE_SHARP,
-#             icon_size=self.ICON_SIZE,
-#             on_click=lambda _: self.page.window.close(),
-#         )
-
-#         # メニューの作成
-#         self.file_menu = ft.PopupMenuButton(
-#             content=Text("ファイル", color="#E0E0E0"),
-#             items=[
-#                 ft.PopupMenuItem(
-#                     text="開く...",
-#                     icon=Icons.FOLDER_OPEN,
-#                     on_click=lambda _: (
-#                         self.on_open_file() if self.on_open_file else None
-#                     ),
-#                 ),
-#                 ft.PopupMenuItem(
-#                     text="終了",
-#                     icon=Icons.EXIT_TO_APP,
-#                     on_click=lambda _: self.page.window.close(),
-#                 ),
-#             ],
-#         )
-
-#         self.content = Row(
-#             [
-#                 WindowDragArea(
-#                     Row(
-#                         [
-#                             Container(
-#                                 Icon(
-#                                     Icons.MOVIE,
-#                                     color="#E0E0E0",
-#                                     size=self.ICON_SIZE,
-#                                 ),
-#                                 padding=padding.only(5, 2, 0, 2),
-#                             ),
-#                             self.title_text,
-#                         ],
-#                         height=self.HEIGHT,
-#                         alignment=alignment.center,
-#                         # alignment=MainAxisAlignment.CENTER,
-#                     ),
-#                     expand=True,
-#                 ),
-#                 self.file_menu,
-#                 self.minimize_button,
-#                 self.maximize_button,
-#                 self.close_button,
-#             ],
-#             spacing=0,
-#         )
-#         self.bgcolor = "#212121"  # ダークモード用の暗い色
-
-#     def on_state_change(self, state):
-#         # ファイル名が設定されている場合、タイトルをファイル名に変更
-#         if state.current_file_name:
-#             self.title_text.value = state.current_file_name
-#         else:
-#             self.title_text.value = self.base_title
-
-#     def minimize_button_clicked(self, e):
-#         self.page.window_minimized = True
-#         self.page.update()
-
-#     def maximized_button_clicked(self, e):
-#         self.page.window.maximized = True if not self.page.window.maximized else False
-#         self.page.update()
-
-#         if self.page.window.maximized:
-#             self.maximize_button.icon = Icons.FILTER_NONE
-#             self.maximize_button.icon_size = 12
-#         else:
-#             self.maximize_button.icon = Icons.CROP_SQUARE_SHARP
-#             self.maximize_button.icon_size = 15
-#         self.update()
 
 
 class WindowTitleBar(Container):
@@ -624,6 +516,7 @@ class TiffPlayer:
                 self.image_view.visible = False
                 self.page.update()
 
+    # original
     def load_tiff(self, file_path):
         try:
             # フレームをリセット
